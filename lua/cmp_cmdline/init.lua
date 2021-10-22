@@ -21,7 +21,7 @@ local definitions = {
   },
   {
     type = 'customlist',
-    regex = [=[\%(\k\)*$]=],
+    regex = [=[[^[:blank:]]*$]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
     fallback = true,
     isIncomplete = false,
