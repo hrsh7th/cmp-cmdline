@@ -11,8 +11,3 @@ require'cmp'.setup.cmdline(':', {
   }
 })
 ```
-
-# Warning
-
-This source will work after merged https://github.com/hrsh7th/nvim-cmp/pull/362
-
