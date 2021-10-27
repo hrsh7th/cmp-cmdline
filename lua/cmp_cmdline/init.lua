@@ -2,25 +2,7 @@ local cmp = require('cmp')
 
 local definitions = {
   {
-    type = 'option',
-    regex = [=[&[^[:blank:]]*$]=],
-    kind = cmp.lsp.CompletionItemKind.Variable,
-    isIncomplete = false,
-    exec = function(_, _, _)
-      return vim.fn.getcompletion('', 'option')
-    end
-  },
-  {
-    type = 'environment',
-    regex = [=[\$[^[:blank:]]*$]=],
-    kind = cmp.lsp.CompletionItemKind.Variable,
-    isIncomplete = false,
-    exec = function(_, _, _)
-      return vim.fn.getcompletion('', 'environment')
-    end
-  },
-  {
-    type = 'customlist',
+    ctype = 'customlist',
     regex = [=[[^[:blank:]]*$]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
     fallback = true,
@@ -53,12 +35,12 @@ local definitions = {
     end
   },
   {
-    type = 'cmdline',
+    ctype = 'cmdline',
     regex = [=[.*]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
-    exec = function(arglead, _, _)
-      return vim.fn.getcompletion(arglead, 'cmdline')
+    exec = function(_, cmdline, _)
+      return vim.fn.getcompletion(cmdline, 'cmdline')
     end
   },
 }
@@ -66,7 +48,12 @@ local definitions = {
 local source = {}
 
 source.new = function()
-  return setmetatable({}, { __index = source })
+  return setmetatable({
+    before_line = '',
+    offset = -1,
+    ctype = '',
+    items = {},
+  }, { __index = source })
 end
 
 source.get_keyword_pattern = function()
@@ -81,38 +68,61 @@ source.is_available = function()
   return vim.api.nvim_get_mode().mode == 'c'
 end
 
-source.complete = function(_, params, callback)
-  local items, kind, isIncomplete = {}, cmp.lsp.CompletionItemKind.Text, false
-  for _, type in ipairs(definitions) do
-    local s, e = vim.regex(type.regex):match_str(params.context.cursor_before_line)
+source.complete = function(self, params, callback)
+  local offset = 0
+  local ctype = ''
+  local items = {}
+  local kind = ''
+  local isIncomplete = false
+  for _, def in ipairs(definitions) do
+    local s, e = vim.regex(def.regex):match_str(params.context.cursor_before_line)
     if s and e then
-      items = type.exec(
-        string.sub(params.context.cursor_before_line, s + 1, e + 1),
+      offset = s
+      ctype = def.type
+      items = def.exec(
+        string.sub(params.context.cursor_before_line, s + 1),
         params.context.cursor_before_line,
         params.context.cursor.col
       )
-      kind = type.kind
-      isIncomplete = type.isIncomplete
-      if not (#items == 0 and type.fallback) then
+      kind = def.kind
+      isIncomplete = def.isIncomplete
+      if not (#items == 0 and def.fallback) then
         break
       end
     end
   end
 
+  local labels = {}
+  items = vim.tbl_map(function(item)
+    if type(item) == 'string' then
+      labels[item] = true
+      return { label = item, kind = kind }
+    end
+      labels[item.word] = true
+    return { label = item.word, kind = kind }
+  end, items)
+
+  local match_prefix = false
+  if #params.context.cursor_before_line > #self.before_line then
+    match_prefix = string.find(params.context.cursor_before_line, self.before_line, 1, true) == 1
+  elseif #params.context.cursor_before_line < #self.before_line then
+    match_prefix = string.find(self.before_line, params.context.cursor_before_line, 1, true) == 1
+  end
+  if match_prefix and self.offset == offset and self.ctype == ctype then
+    for _, item in ipairs(self.items) do
+      if not labels[item.label] then
+        table.insert(items, item)
+      end
+    end
+  end
+  self.before_line = params.context.cursor_before_line
+  self.offset = offset
+  self.ctype = ctype
+  self.items = items
+
   callback({
     isIncomplete = isIncomplete,
-    items = vim.tbl_map(function(item)
-      if type(item) == 'string' then
-        return {
-          label = item,
-          kind = kind,
-        }
-      end
-      return {
-        label = item.word,
-        kind = kind,
-      }
-    end, items)
+    items = items,
   })
 end
 
