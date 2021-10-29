@@ -36,7 +36,7 @@ local definitions = {
   },
   {
     ctype = 'cmdline',
-    regex = [=[.*]=],
+    regex = [=[^[^!].*]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
     exec = function(_, cmdline, _)
@@ -61,7 +61,7 @@ source.get_keyword_pattern = function()
 end
 
 source.get_trigger_characters = function()
-  return { '$', ':', '!', '&', ' ' }
+  return { ' ' }
 end
 
 source.is_available = function()
