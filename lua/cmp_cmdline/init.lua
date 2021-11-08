@@ -17,7 +17,12 @@ local definitions = {
           if vim.tbl_contains({ 'customlist', 'custom' }, option.complete) then
             local ok, items = pcall(function()
               local func = string.gsub(option.complete_arg, 's:', ('<SNR>%d_'):format(option.script_id))
-              return vim.api.nvim_call_function(func, { arglead, cmdline, curpos })
+              return vim.fn.eval(('%s("%s", "%s", "%s")'):format(
+                func,
+                vim.fn.escape(arglead, '"'),
+                vim.fn.escape(cmdline, '"'),
+                vim.fn.escape(curpos, '"')
+              ))
             end)
             if not ok then
               return {}
