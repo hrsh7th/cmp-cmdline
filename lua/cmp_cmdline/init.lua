@@ -2,44 +2,6 @@ local cmp = require('cmp')
 
 local definitions = {
   {
-    ctype = 'customlist',
-    regex = [=[[^[:blank:]]*$]=],
-    kind = cmp.lsp.CompletionItemKind.Variable,
-    fallback = true,
-    isIncomplete = false,
-    exec = function(arglead, cmdline, curpos)
-      local name = cmdline:match([=[^[ <'>]*(%a*)]=])
-      if not name then
-        return {}
-      end
-      for name_, option in pairs(vim.api.nvim_get_commands({ builtin = false })) do
-        if name_ == name then
-          if vim.tbl_contains({ 'customlist', 'custom' }, option.complete) then
-            local ok, items = pcall(function()
-              local func = string.gsub(option.complete_arg, 's:', ('<SNR>%d_'):format(option.script_id))
-              return vim.fn.eval(('%s("%s", "%s", "%s")'):format(
-                func,
-                vim.fn.escape(arglead, '"'),
-                vim.fn.escape(cmdline, '"'),
-                vim.fn.escape(curpos, '"')
-              ))
-            end)
-            if not ok then
-              return {}
-            end
-            if type(items) == 'string' then
-              return vim.split(items, '\n')
-            elseif type(items) == 'table' then
-              return items
-            end
-            return {}
-          end
-        end
-      end
-      return {}
-    end
-  },
-  {
     ctype = 'cmdline',
     regex = [=[[^[:blank:]]*$]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
