@@ -41,11 +41,30 @@ local definitions = {
   },
   {
     ctype = 'cmdline',
-    regex = [=[^[^!].*]=],
+    regex = [=[[^[:blank:]]*$]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
-    exec = function(_, cmdline, _)
-      return vim.fn.getcompletion(cmdline, 'cmdline')
+    exec = function(arglead, cmdline, _)
+      local s = vim.regex([[\k*$]]):match_str(arglead)
+      local input = string.sub(arglead, 1, s or #arglead)
+
+      local items = vim.fn.getcompletion(cmdline, 'cmdline')
+      items = vim.tbl_map(function(item)
+        return type(item) == 'string' and { word = item } or item
+      end, items)
+
+      local filtered = vim.tbl_filter(function(item)
+        return string.find(item.word, input, 1, true) == 1
+      end, items)
+
+      if #filtered == 0 then
+        filtered = vim.tbl_map(function(item)
+          item.word = input .. item.word
+          return item
+        end, items)
+      end
+
+      return filtered
     end
   },
 }
@@ -62,7 +81,7 @@ source.new = function()
 end
 
 source.get_keyword_pattern = function()
-  return [=[\k*]=]
+  return [=[[^[:blank:]]*]=]
 end
 
 source.get_trigger_characters = function()
