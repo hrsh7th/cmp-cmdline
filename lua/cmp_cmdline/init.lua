@@ -51,7 +51,8 @@ source.get_trigger_characters = function()
 end
 
 source.is_available = function()
-  return vim.api.nvim_get_mode().mode == 'c'
+  return (vim.api.nvim_get_mode().mode == 'c'
+    or vim.api.nvim_get_var('cmp_cmdline_cmdwin_active') == true)
 end
 
 source.complete = function(self, params, callback)
