@@ -7,26 +7,18 @@ local definitions = {
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
     exec = function(arglead, cmdline, _)
-      local s = vim.regex([[\k*$]]):match_str(arglead)
-      local input = string.sub(arglead, 1, s or #arglead)
+      local suffix_pos = vim.regex([[\k*$]]):match_str(arglead)
+      local fixed_input = string.sub(arglead, 1, suffix_pos or #arglead)
 
-      local items = vim.fn.getcompletion(cmdline, 'cmdline')
-      items = vim.tbl_map(function(item)
-        return type(item) == 'string' and { word = item } or item
-      end, items)
-
-      local filtered = vim.tbl_filter(function(item)
-        return string.find(item.word, input, 1, true) == 1
-      end, items)
-
-      if #filtered == 0 then
-        filtered = vim.tbl_map(function(item)
-          item.word = input .. item.word
-          return item
-        end, items)
+      local items = {}
+      for _, item in ipairs(vim.fn.getcompletion(cmdline, 'cmdline')) do
+        item = type(item) == 'string' and { word = item } or item
+        if not string.find(item.word, fixed_input, 1, true) then
+          item.word = fixed_input .. item.word
+        end
+        table.insert(items, item)
       end
-
-      return filtered
+      return items
     end
   },
 }
@@ -89,7 +81,7 @@ source.complete = function(self, params, callback)
     return item
   end, items)
 
-  -- Check the previous completion can merge (support both backspace and new any char).
+  -- `vim.fn.getcompletion` does not handle fuzzy matches. So, we must return all items, including items that were matched in the previous input.
   local should_merge_previous_items = false
   if #params.context.cursor_before_line > #self.before_line then
     should_merge_previous_items = string.find(params.context.cursor_before_line, self.before_line, 1, true) == 1
