@@ -1,5 +1,29 @@
 local cmp = require('cmp')
 
+local MODIFIER_REGEX = {
+  vim.regex([=[abo\%[veleft]]=]),
+  vim.regex([=[bel\%[owright]]=]),
+  vim.regex([=[bo\%[tright]]=]),
+  vim.regex([=[bro\%[wse]]=]),
+  vim.regex([=[conf\%[irm]]=]),
+  vim.regex([=[hid\%[e]]=]),
+  vim.regex([=[keepalt]=]),
+  vim.regex([=[keeppa\%[tterns]]=]),
+  vim.regex([=[lefta\%[bove]]=]),
+  vim.regex([=[loc\%[kmarks]]=]),
+  vim.regex([=[nos\%[wapfile]]=]),
+  vim.regex([=[rightb\%[elow]]=]),
+  vim.regex([=[sil\%[ent]]=]),
+  vim.regex([=[tab]=]),
+  vim.regex([=[to\%[pleft]]=]),
+  vim.regex([=[verb\%[ose]]=]),
+  vim.regex([=[vert\%[ical]]=]),
+}
+local COUNT_RANGE_REGEX = {
+  vim.regex([=[\%(\d\+\|\$\),\%(\d\+\|\$\)]=]),
+  vim.regex([=[\%(\d\+\|\$\)]=]),
+}
+
 local definitions = {
   {
     ctype = 'cmdline',
@@ -10,9 +34,34 @@ local definitions = {
       local suffix_pos = vim.regex([[\k*$]]):match_str(arglead)
       local fixed_input = string.sub(arglead, 1, suffix_pos or #arglead)
 
+      -- Cleanup modifiers.
+      if arglead ~= cmdline then
+        for _, re in ipairs(MODIFIER_REGEX) do
+          local s, e = re:match_str(cmdline)
+          if s and e then
+            cmdline = string.sub(cmdline, e + 1)
+            break
+          end
+        end
+      end
+
+      -- Cleanup range or count.
+      local prefix = ''
+      for _, re in ipairs(COUNT_RANGE_REGEX) do
+        local s, e = re:match_str(cmdline)
+        if s and e then
+          if arglead == cmdline then
+            prefix = string.sub(cmdline, 1, e)
+          end
+          cmdline = string.sub(cmdline, e + 1)
+          break
+        end
+      end
+
       local items = {}
       for _, item in ipairs(vim.fn.getcompletion(cmdline, 'cmdline')) do
         item = type(item) == 'string' and { word = item } or item
+        item.word = prefix .. item.word
         if not string.find(item.word, fixed_input, 1, true) then
           item.word = fixed_input .. item.word
         end
