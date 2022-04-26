@@ -1,27 +1,28 @@
 local cmp = require('cmp')
 
 local MODIFIER_REGEX = {
-  vim.regex([=[abo\%[veleft]]=]),
-  vim.regex([=[bel\%[owright]]=]),
-  vim.regex([=[bo\%[tright]]=]),
-  vim.regex([=[bro\%[wse]]=]),
-  vim.regex([=[conf\%[irm]]=]),
-  vim.regex([=[hid\%[e]]=]),
-  vim.regex([=[keepalt]=]),
-  vim.regex([=[keeppa\%[tterns]]=]),
-  vim.regex([=[lefta\%[bove]]=]),
-  vim.regex([=[loc\%[kmarks]]=]),
-  vim.regex([=[nos\%[wapfile]]=]),
-  vim.regex([=[rightb\%[elow]]=]),
-  vim.regex([=[sil\%[ent]]=]),
-  vim.regex([=[tab]=]),
-  vim.regex([=[to\%[pleft]]=]),
-  vim.regex([=[verb\%[ose]]=]),
-  vim.regex([=[vert\%[ical]]=]),
+  vim.regex([=[abo\%[veleft]\s*]=]),
+  vim.regex([=[bel\%[owright]\s*]=]),
+  vim.regex([=[bo\%[tright]\s*]=]),
+  vim.regex([=[bro\%[wse]\s*]=]),
+  vim.regex([=[conf\%[irm]\s*]=]),
+  vim.regex([=[hid\%[e]\s*]=]),
+  vim.regex([=[keepal\s*t]=]),
+  vim.regex([=[keeppa\%[tterns]\s*]=]),
+  vim.regex([=[lefta\%[bove]\s*]=]),
+  vim.regex([=[loc\%[kmarks]\s*]=]),
+  vim.regex([=[nos\%[wapfile]\s*]=]),
+  vim.regex([=[rightb\%[elow]\s*]=]),
+  vim.regex([=[sil\%[ent]\s*]=]),
+  vim.regex([=[tab\s*]=]),
+  vim.regex([=[to\%[pleft]\s*]=]),
+  vim.regex([=[verb\%[ose]\s*]=]),
+  vim.regex([=[vert\%[ical]\s*]=]),
 }
 local COUNT_RANGE_REGEX = {
-  vim.regex([=[\%(\d\+\|\$\),\%(\d\+\|\$\)]=]),
-  vim.regex([=[\%(\d\+\|\$\)]=]),
+  vim.regex([=[\%(\d\+\|\$\),\%(\d\+\|\$\)\s*]=]),
+  vim.regex([=['<,'>\s*]=]),
+  vim.regex([=[\%(\d\+\|\$\)\s*]=]),
 }
 
 local definitions = {
@@ -56,6 +57,11 @@ local definitions = {
           cmdline = string.sub(cmdline, e + 1)
           break
         end
+      end
+
+      -- Ignore prefix only cmdline. (e.g.: 4, '<,'>)
+      if cmdline == '' then
+        return {}
       end
 
       local items = {}
