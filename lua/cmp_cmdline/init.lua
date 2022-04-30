@@ -19,10 +19,25 @@ local MODIFIER_REGEX = {
   vim.regex([=[verb\%[ose]\s*]=]),
   vim.regex([=[vert\%[ical]\s*]=]),
 }
+
+-- Matches (examples):
+-- 23
+-- -
+-- +23
+-- .
+-- $
+local line_address_regex = [=[\%(\$\|\.\|[-+]\d*\|\d\+\)\?]=]
+
 local COUNT_RANGE_REGEX = {
-  vim.regex([=[\%(\d\+\|\$\),\%(\d\+\|\$\)\s*]=]),
   vim.regex([=['<,'>\s*]=]),
-  vim.regex([=[\%(\d\+\|\$\)\s*]=]),
+  -- The regex below should match these examples:
+  -- 4
+  -- 5,
+  -- 6,7
+  -- -6,+7
+  -- +6,$
+  -- -6,-3t.
+  vim.regex(line_address_regex .. [=[,\?]=] .. line_address_regex .. [=[\s*[tmyd]\?\s*]=] .. line_address_regex),
 }
 
 local definitions = {
