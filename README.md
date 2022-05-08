@@ -22,4 +22,7 @@ require'cmp'.setup.cmdline('/', {
 })
 ```
 
+Completions for Command-line window `q:`  
+Add `{ name = 'cmdline' }` to your nvim-cmp sources in the same way, as you would add any other source.
+
 For the buffer source to work, [cmp-buffer](https://github.com/hrsh7th/cmp-buffer) is needed.
