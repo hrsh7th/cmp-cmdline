@@ -46,7 +46,7 @@ local definitions = {
     regex = [=[[^[:blank:]]*$]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
-    exec = function(arglead, cmdline, _)
+    exec = function(arglead, cmdline, col, force)
       local suffix_pos = vim.regex([[\k*$]]):match_str(arglead)
       local fixed_input = string.sub(arglead, 1, suffix_pos or #arglead)
 
@@ -75,7 +75,7 @@ local definitions = {
       end
 
       -- Ignore prefix only cmdline. (e.g.: 4, '<,'>)
-      if cmdline == '' then
+      if not force and cmdline == '' then
         return {}
       end
 
@@ -130,7 +130,8 @@ source.complete = function(self, params, callback)
       items = def.exec(
         string.sub(params.context.cursor_before_line, s + 1),
         params.context.cursor_before_line,
-        params.context.cursor.col
+        params.context.cursor.col,
+        params.context:get_reason() == cmp.ContextReason.Manual
       )
       kind = def.kind
       isIncomplete = def.isIncomplete
