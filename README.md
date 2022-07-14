@@ -9,7 +9,8 @@ Completions for command mode:
 require'cmp'.setup.cmdline(':', {
   sources = {
     { name = 'cmdline' }
-  }
+  },
+  mapping = cmp.mapping.preset.cmdline({})
 })
 ```
 
@@ -18,7 +19,8 @@ Completions for `/` search based on current buffer:
 require'cmp'.setup.cmdline('/', {
   sources = {
     { name = 'buffer' }
-  }
+  },
+  mapping = cmp.mapping.preset.cmdline({}),
 })
 ```
 
