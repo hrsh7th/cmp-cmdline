@@ -65,7 +65,8 @@ local definitions = {
       end
 
       local items = {}
-      for _, item in ipairs(vim.fn.getcompletion(cmdline, 'cmdline')) do
+      local escaped = cmdline:gsub([[\\]], [[\\\\]]);
+      for _, item in ipairs(vim.fn.getcompletion(escaped, 'cmdline')) do
         item = type(item) == 'string' and { word = item } or item
         item.word = prefix .. item.word
         if not string.find(item.word, fixed_input, 1, true) then
