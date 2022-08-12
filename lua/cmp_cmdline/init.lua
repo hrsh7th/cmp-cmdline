@@ -59,8 +59,13 @@ local definitions = {
         end
       end
 
+      local source = require('cmp_cmdline')
       -- Ignore prefix only cmdline. (e.g.: 4, '<,'>)
-      if not force and cmdline == '' then
+      if not force and #cmdline < source.cmdline_length then
+        return {}
+      end
+
+      if #arglead < source.cmdargs_length then
         return {}
       end
 
@@ -80,6 +85,9 @@ local definitions = {
 }
 
 local source = {}
+
+source.cmdline_length = 1
+source.cmdargs_length = 0
 
 source.new = function()
   return setmetatable({
