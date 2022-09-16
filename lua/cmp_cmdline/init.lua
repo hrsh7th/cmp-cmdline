@@ -98,10 +98,6 @@ source.get_trigger_characters = function()
   return { ' ', '.', '#', '-' }
 end
 
-source.is_available = function()
-  return vim.api.nvim_get_mode().mode == 'c'
-end
-
 source.complete = function(self, params, callback)
   local offset = 0
   local ctype = ''
