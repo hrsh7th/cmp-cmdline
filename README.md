@@ -6,20 +6,26 @@ nvim-cmp source for vim's cmdline.
 
 Completions for command mode:
 ```lua
-require'cmp'.setup.cmdline(':', {
-  sources = {
-    { name = 'cmdline' }
-  }
-})
+    -- `/` cmdline setup.
+    cmp.setup.cmdline('/', {
+      mapping = cmp.mapping.preset.cmdline(),
+      sources = {
+        { name = 'buffer' }
+      }
+    })
 ```
 
 Completions for `/` search based on current buffer:
 ```lua
-require'cmp'.setup.cmdline('/', {
-  sources = {
-    { name = 'buffer' }
-  }
-})
+    -- `:` cmdline setup.
+    cmp.setup.cmdline(':', {
+      mapping = cmp.mapping.preset.cmdline(),
+      sources = cmp.config.sources({
+        { name = 'path' }
+      }, {
+        { name = 'cmdline' }
+      })
+    })
 ```
 
 For the buffer source to work, [cmp-buffer](https://github.com/hrsh7th/cmp-buffer) is needed.
