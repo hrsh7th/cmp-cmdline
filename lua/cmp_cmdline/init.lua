@@ -161,4 +161,3 @@ source.complete = function(self, params, callback)
 end
 
 return source
-
