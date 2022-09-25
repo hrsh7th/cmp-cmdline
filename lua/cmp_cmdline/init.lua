@@ -35,7 +35,7 @@ local definitions = {
       local suffix_pos = vim.regex([[\k*$]]):match_str(arglead)
       local fixed_input = string.sub(arglead, 1, suffix_pos or #arglead)
 
-      -- Cleanup modifiers.
+      -- Clean up modifiers.
       if arglead ~= cmdline then
         for _, re in ipairs(MODIFIER_REGEX) do
           local s, e = re:match_str(cmdline)
@@ -46,7 +46,7 @@ local definitions = {
         end
       end
 
-      -- Cleanup range or count.
+      -- Clean up range or count.
       local prefix = ''
       for _, re in ipairs(COUNT_RANGE_REGEX) do
         local s, e = re:match_str(cmdline)
