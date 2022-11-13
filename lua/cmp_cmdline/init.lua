@@ -29,8 +29,8 @@ local MODIFIER_REGEX = create_regex({
 }, true)
 
 local COUNT_RANGE_REGEX = create_regex({
-  [=[\s*\%(\d\+\|\$\),\%(\d\+\|\$\)\s*]=],
-  [=[\s*'<,'>\s*]=],
+  [=[\s*\%(\d\+\|\$\)\%[,\%(\d\+\|\$\)]\s*]=],
+  [=[\s*'\%[<,'>]\s*]=],
   [=[\s*\%(\d\+\|\$\)\s*]=],
 }, true)
 
@@ -73,9 +73,10 @@ local definitions = {
       -- Support `lua vim.treesitter._get|` or `'<,'>del|` completion.
       -- In this case, the `vim.fn.getcompletion` will return only `get_query` for `vim.treesitter.get_|`.
       -- We should detect `vim.treesitter.` and `get_query` separately.
+      -- TODO: The `\h\w*` was choosed by huristic. We should consider more suitable detection.
       local fixed_input
       do
-        local suffix_pos = vim.regex([[\k*$]]):match_str(arglead)
+        local suffix_pos = vim.regex([[\h\w*$]]):match_str(arglead)
         fixed_input = string.sub(arglead, 1, suffix_pos or #arglead)
       end
 
