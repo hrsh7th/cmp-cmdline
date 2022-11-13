@@ -66,13 +66,18 @@ local definitions = {
 
       local items = {}
       local escaped = cmdline:gsub([[\\]], [[\\\\]]);
-      for _, item in ipairs(vim.fn.getcompletion(escaped, 'cmdline')) do
-        item = type(item) == 'string' and { word = item } or item
-        item.word = prefix .. item.word
+      for _, word_or_item in ipairs(vim.fn.getcompletion(escaped, 'cmdline')) do
+        local word = type(word_or_item) == 'string' and word_or_item or word_or_item.word
+        local item = { word = prefix .. word }
+        table.insert(items, item)
+        table.insert(items, vim.tbl_deep_extend('force', {}, item, {
+          word = prefix .. 'no' .. item.word
+        }))
+      end
+      for _, item in ipairs(items) do
         if not string.find(item.word, fixed_input, 1, true) then
           item.word = fixed_input .. item.word
         end
-        table.insert(items, item)
       end
       return items
     end
@@ -161,4 +166,3 @@ source.complete = function(self, params, callback)
 end
 
 return source
-
