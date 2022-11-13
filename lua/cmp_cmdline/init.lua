@@ -44,6 +44,7 @@ local definitions = {
       local fixed_input = string.sub(arglead, 1, suffix_pos or #arglead)
 
       -- Cleanup modifiers.
+      -- We can just remove modifiers because modifiers is always separated by space.
       if arglead ~= cmdline then
         for _, re in ipairs(MODIFIER_REGEX) do
           local s, e = re:match_str(cmdline)
@@ -54,7 +55,9 @@ local definitions = {
         end
       end
 
-      -- Cleanup range or count.
+      -- Support ":'<,'>del|".
+      -- The `vim.fn.getcompletion` does not return `delete` command for this case.
+      -- We should remove `'<,'>` for `vim.fn.getcompletion` and then after add the removed prefix for each completed items.
       local prefix = ''
       for _, re in ipairs(COUNT_RANGE_REGEX) do
         local s, e = re:match_str(cmdline)
