@@ -8,6 +8,10 @@ local function create_regex(patterns, head)
   return vim.regex(pattern)
 end
 
+local DEFAULT_OPTION = {
+  ignore_cmds = { 'Man', '!' }
+}
+
 local MODIFIER_REGEX = create_regex({
   [=[\s*abo\%[veleft]\s*]=],
   [=[\s*bel\%[owright]\s*]=],
@@ -44,7 +48,17 @@ local definitions = {
     regex = [=[[^[:blank:]]*$]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
-    exec = function(arglead, cmdline, col, force)
+    exec = function(option, arglead, cmdline, col, force)
+      local _, parsed = pcall(function()
+        return vim.api.nvim_parse_cmd(cmdline, {}) or {}
+      end)
+      parsed = parsed or {}
+
+      -- Check ignore cmd.
+      if vim.tbl_contains(option.ignore_cmds, parsed.cmd) then
+        return {}
+      end
+
       -- Cleanup modifiers.
       -- We can just remove modifiers because modifiers is always separated by space.
       if arglead ~= cmdline then
@@ -142,6 +156,7 @@ source.complete = function(self, params, callback)
       offset = s
       ctype = def.type
       items = def.exec(
+        vim.tbl_deep_extend('keep', params.option, DEFAULT_OPTION),
         string.sub(params.context.cursor_before_line, s + 1),
         params.context.cursor_before_line,
         params.context.cursor.col,
