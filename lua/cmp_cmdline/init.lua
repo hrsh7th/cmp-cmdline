@@ -25,6 +25,10 @@ local COUNT_RANGE_REGEX = {
   vim.regex([=[\%(\d\+\|\$\)\s*]=]),
 }
 
+local OPTION_NAME_COMPLETION_REGEX = {
+  vim.regex([=[se\%[tlocal]]=]),
+}
+
 local definitions = {
   {
     ctype = 'cmdline',
@@ -32,6 +36,7 @@ local definitions = {
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
     exec = function(arglead, cmdline, col, force)
+      local original_cmdline = cmdline
       local suffix_pos = vim.regex([[\k*$]]):match_str(arglead)
       local fixed_input = string.sub(arglead, 1, suffix_pos or #arglead)
 
@@ -64,15 +69,25 @@ local definitions = {
         return {}
       end
 
+      local is_option_name_completion --[[@as string]]
+      for _, re in ipairs(OPTION_NAME_COMPLETION_REGEX) do
+        if re:match_str(cmdline) then
+          is_option_name_completion = true
+          break
+        end
+      end
+
       local items = {}
       local escaped = cmdline:gsub([[\\]], [[\\\\]]);
       for _, word_or_item in ipairs(vim.fn.getcompletion(escaped, 'cmdline')) do
         local word = type(word_or_item) == 'string' and word_or_item or word_or_item.word
         local item = { word = prefix .. word }
         table.insert(items, item)
-        table.insert(items, vim.tbl_deep_extend('force', {}, item, {
-          word = prefix .. 'no' .. item.word
-        }))
+        if is_option_name_completion then
+          table.insert(items, vim.tbl_deep_extend('force', {}, item, {
+            word = prefix .. 'no' .. item.word
+          }))
+        end
       end
       for _, item in ipairs(items) do
         if not string.find(item.word, fixed_input, 1, true) then
