@@ -50,7 +50,13 @@ local definitions = {
     isIncomplete = true,
     exec = function(option, arglead, cmdline, col, force)
       local _, parsed = pcall(function()
-        return vim.api.nvim_parse_cmd(cmdline, {}) or {}
+        local target = cmdline
+        local s, e = COUNT_RANGE_REGEX:match_str(target)
+        if s and e then
+          target = target:sub(e + 1)
+        end
+        -- nvim_parse_cmd throw error when the cmdline contains range specifier.
+        return vim.api.nvim_parse_cmd(target, {}) or {}
       end)
       parsed = parsed or {}
 
