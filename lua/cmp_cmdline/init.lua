@@ -90,7 +90,7 @@ local definitions = {
           target = target:sub(e + 1)
         end
         -- nvim_parse_cmd throw error when the cmdline contains range specifier.
-        return vim.api.nvim_parse_cmd(target, {}) or {}
+        return vim.api.nvim_parse_cmd(target, { mods = { silent = true } }) or {}
       end)
       parsed = parsed or {}
 
@@ -126,8 +126,18 @@ local definitions = {
       local is_option_name_completion = OPTION_NAME_COMPLETION_REGEX:match_str(cmdline) ~= nil
 
       local items = {}
+
       local escaped = cmdline:gsub([[\\]], [[\\\\]]);
-      for _, word_or_item in ipairs(vim.fn.getcompletion(escaped, 'cmdline')) do
+      local cmdtype = 'cmdline'
+      if vim.fn.getcmdtype() == '@' then
+        -- Invoke getcmdcompltype() only when getcmdtype() == '@'.
+        -- Because once getcmdcompltype() was executed, press <Up> <Down> for ':e ./' will get wrong result on command line.
+        local cpl = vim.fn.getcmdcompltype()
+        if cpl ~= '' then
+          cmdtype = cpl
+        end
+      end
+      for _, word_or_item in ipairs(vim.fn.getcompletion(escaped, cmdtype)) do
         local word = type(word_or_item) == 'string' and word_or_item or word_or_item.word
         local item = { label = word }
         table.insert(items, item)
