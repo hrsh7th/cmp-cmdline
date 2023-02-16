@@ -162,7 +162,7 @@ source.complete = function(self, params, callback)
       offset = s
       ctype = def.type
       items = def.exec(
-        vim.tbl_deep_extend('keep', params.option, DEFAULT_OPTION),
+        vim.tbl_deep_extend('keep', params.option or {}, DEFAULT_OPTION),
         string.sub(params.context.cursor_before_line, s + 1),
         params.context.cursor_before_line,
         params.context.cursor.col,
