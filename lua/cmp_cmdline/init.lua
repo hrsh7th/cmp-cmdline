@@ -127,6 +127,13 @@ local definitions = {
 
       local items = {}
       local escaped = cmdline:gsub([[\\]], [[\\\\]]);
+      local is_magic_file = false
+      local input_start = string.sub(fixed_input, 1, 1)
+      if input_start == '%' then
+        is_magic_file = true
+      elseif input_start == '#' then
+        is_magic_file = true
+      end
       for _, word_or_item in ipairs(vim.fn.getcompletion(escaped, 'cmdline')) do
         local word = type(word_or_item) == 'string' and word_or_item or word_or_item.word
         local item = { label = word }
@@ -139,7 +146,24 @@ local definitions = {
         end
       end
       for _, item in ipairs(items) do
-        if not string.find(item.label, fixed_input, 1, true) then
+        if not is_magic_file and not string.find(item.label, fixed_input, 1, true) then
+          item.label = fixed_input .. item.label
+        if is_magic_file then
+          local replace_range = {
+            start = {
+              line = 0,
+              character = #cmdline - #fixed_input - 1
+            },
+            ['end'] = {
+              line = 0,
+              character = #cmdline - 1
+            }
+          }
+          item.textEdit = {
+            replace = replace_range,
+            range = replace_range,
+            newText = item.label
+          }
           item.label = fixed_input .. item.label
         end
       end
