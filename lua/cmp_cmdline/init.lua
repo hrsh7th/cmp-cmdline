@@ -39,8 +39,19 @@ local COUNT_RANGE_REGEX = create_regex({
 }, true)
 
 local OPTION_NAME_COMPLETION_REGEX = create_regex({
-  [=[se\%[tlocal]]=],
+  [=[se\%[tlocal][^=]*$]=],
 }, true)
+
+---@param word string
+---@return boolean?
+local function is_boolean_option(word)
+  local ok, opt = pcall(function()
+    return vim.opt[word]:get()
+  end)
+  if ok then
+    return type(opt) == 'boolean'
+  end
+end
 
 local definitions = {
   {
@@ -48,7 +59,7 @@ local definitions = {
     regex = [=[[^[:blank:]]*$]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
-    exec = function(option, arglead, cmdline, col, force)
+    exec = function(option, arglead, cmdline, force)
       local _, parsed = pcall(function()
         local target = cmdline
         local s, e = COUNT_RANGE_REGEX:match_str(target)
@@ -115,9 +126,10 @@ local definitions = {
         local word = type(word_or_item) == 'string' and word_or_item or word_or_item.word
         local item = { word = word }
         table.insert(items, item)
-        if is_option_name_completion then
+        if is_option_name_completion and is_boolean_option(word) then
           table.insert(items, vim.tbl_deep_extend('force', {}, item, {
-            word = 'no' .. item.word
+            word = 'no' .. word,
+            filterText = word,
           }))
         end
       end
@@ -154,7 +166,7 @@ source.complete = function(self, params, callback)
   local offset = 0
   local ctype = ''
   local items = {}
-  local kind = ''
+  local kind = 0
   local isIncomplete = false
   for _, def in ipairs(definitions) do
     local s, e = vim.regex(def.regex):match_str(params.context.cursor_before_line)
@@ -165,7 +177,6 @@ source.complete = function(self, params, callback)
         vim.tbl_deep_extend('keep', params.option or {}, DEFAULT_OPTION),
         string.sub(params.context.cursor_before_line, s + 1),
         params.context.cursor_before_line,
-        params.context.cursor.col,
         params.context:get_reason() == cmp.ContextReason.Manual
       )
       kind = def.kind
@@ -178,11 +189,11 @@ source.complete = function(self, params, callback)
 
   local labels = {}
   items = vim.tbl_map(function(item)
-    if type(item) == 'string' then
-      item = { label = item, kind = kind }
-    else
-      item = { label = item.word, kind = kind }
-    end
+    item = {
+      label = item.word,
+      filterText = item.filterText,
+      kind = kind
+    }
     labels[item.label] = true
     return item
   end, items)
