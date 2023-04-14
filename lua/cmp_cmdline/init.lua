@@ -124,18 +124,18 @@ local definitions = {
       local escaped = cmdline:gsub([[\\]], [[\\\\]]);
       for _, word_or_item in ipairs(vim.fn.getcompletion(escaped, 'cmdline')) do
         local word = type(word_or_item) == 'string' and word_or_item or word_or_item.word
-        local item = { word = word }
+        local item = { label = word }
         table.insert(items, item)
         if is_option_name_completion and is_boolean_option(word) then
           table.insert(items, vim.tbl_deep_extend('force', {}, item, {
-            word = 'no' .. word,
+            label = 'no' .. word,
             filterText = word,
           }))
         end
       end
       for _, item in ipairs(items) do
-        if not string.find(item.word, fixed_input, 1, true) then
-          item.word = fixed_input .. item.word
+        if not string.find(item.label, fixed_input, 1, true) then
+          item.label = fixed_input .. item.label
         end
       end
       return items
@@ -166,7 +166,7 @@ source.complete = function(self, params, callback)
   local offset = 0
   local ctype = ''
   local items = {}
-  local kind = 0
+  local kind
   local isIncomplete = false
   for _, def in ipairs(definitions) do
     local s, e = vim.regex(def.regex):match_str(params.context.cursor_before_line)
@@ -188,15 +188,10 @@ source.complete = function(self, params, callback)
   end
 
   local labels = {}
-  items = vim.tbl_map(function(item)
-    item = {
-      label = item.word,
-      filterText = item.filterText,
-      kind = kind
-    }
+  for _, item in ipairs(items) do
+    item.kind = kind
     labels[item.label] = true
-    return item
-  end, items)
+  end
 
   -- `vim.fn.getcompletion` does not handle fuzzy matches. So, we must return all items, including items that were matched in the previous input.
   local should_merge_previous_items = false
