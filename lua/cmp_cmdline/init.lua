@@ -39,8 +39,19 @@ local COUNT_RANGE_REGEX = create_regex({
 }, true)
 
 local OPTION_NAME_COMPLETION_REGEX = create_regex({
-  [=[se\%[tlocal]]=],
+  [=[se\%[tlocal][^=]*$]=],
 }, true)
+
+---@param word string
+---@return boolean?
+local function is_boolean_option(word)
+  local ok, opt = pcall(function()
+    return vim.opt[word]:get()
+  end)
+  if ok then
+    return type(opt) == 'boolean'
+  end
+end
 
 local definitions = {
   {
@@ -115,9 +126,10 @@ local definitions = {
         local word = type(word_or_item) == 'string' and word_or_item or word_or_item.word
         local item = { word = word }
         table.insert(items, item)
-        if is_option_name_completion then
+        if is_option_name_completion and is_boolean_option(word) then
           table.insert(items, vim.tbl_deep_extend('force', {}, item, {
-            word = 'no' .. item.word
+            word = 'no' .. word,
+            filterText = word,
           }))
         end
       end
@@ -178,11 +190,11 @@ source.complete = function(self, params, callback)
 
   local labels = {}
   items = vim.tbl_map(function(item)
-    if type(item) == 'string' then
-      item = { label = item, kind = kind }
-    else
-      item = { label = item.word, kind = kind }
-    end
+    item = {
+      label = item.word,
+      filterText = item.filterText,
+      kind = kind
+    }
     labels[item.label] = true
     return item
   end, items)
