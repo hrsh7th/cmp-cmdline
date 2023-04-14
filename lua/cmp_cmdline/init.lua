@@ -1,5 +1,8 @@
 local cmp = require('cmp')
 
+---@param patterns string[]
+---@param head boolean
+---@return table #regex object
 local function create_regex(patterns, head)
   local pattern = [[\%(]] .. table.concat(patterns, [[\|]]) .. [[\)]]
   if head then
@@ -53,6 +56,15 @@ local function is_boolean_option(word)
   end
 end
 
+---@class cmp.Cmdline.Definition
+---@field ctype string
+---@field regex string
+---@field kind lsp.CompletionItemKind
+---@field isIncomplete boolean
+---@field exec fun(option: table, arglead: string, cmdline: string, force: boolean): lsp.CompletionItem[]
+---@field fallback boolean?
+
+---@type cmp.Cmdline.Definition[]
 local definitions = {
   {
     ctype = 'cmdline',
@@ -172,7 +184,7 @@ source.complete = function(self, params, callback)
     local s, e = vim.regex(def.regex):match_str(params.context.cursor_before_line)
     if s and e then
       offset = s
-      ctype = def.type
+      ctype = def.ctype
       items = def.exec(
         vim.tbl_deep_extend('keep', params.option or {}, DEFAULT_OPTION),
         string.sub(params.context.cursor_before_line, s + 1),
