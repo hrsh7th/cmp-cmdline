@@ -59,7 +59,7 @@ local definitions = {
     regex = [=[[^[:blank:]]*$]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
-    exec = function(option, arglead, cmdline, col, force)
+    exec = function(option, arglead, cmdline, force)
       local _, parsed = pcall(function()
         local target = cmdline
         local s, e = COUNT_RANGE_REGEX:match_str(target)
@@ -166,7 +166,7 @@ source.complete = function(self, params, callback)
   local offset = 0
   local ctype = ''
   local items = {}
-  local kind = ''
+  local kind = 0
   local isIncomplete = false
   for _, def in ipairs(definitions) do
     local s, e = vim.regex(def.regex):match_str(params.context.cursor_before_line)
@@ -177,7 +177,6 @@ source.complete = function(self, params, callback)
         vim.tbl_deep_extend('keep', params.option or {}, DEFAULT_OPTION),
         string.sub(params.context.cursor_before_line, s + 1),
         params.context.cursor_before_line,
-        params.context.cursor.col,
         params.context:get_reason() == cmp.ContextReason.Manual
       )
       kind = def.kind
