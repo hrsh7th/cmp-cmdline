@@ -100,19 +100,6 @@ local definitions = {
         end
       end
 
-      -- Support ":'<,'>del|".
-      -- The `vim.fn.getcompletion` does not return `delete` command for this case.
-      -- We should remove `'<,'>` for `vim.fn.getcompletion` and then after add the removed prefix for each completed items.
-      if arglead == cmdline then
-        while true do
-          local s, e = COUNT_RANGE_REGEX:match_str(cmdline)
-          if s == nil then
-            break
-          end
-          cmdline = string.sub(cmdline, e + 1)
-        end
-      end
-
       -- Support `lua vim.treesitter._get|` or `'<,'>del|` completion.
       -- In this case, the `vim.fn.getcompletion` will return only `get_query` for `vim.treesitter.get_|`.
       -- We should detect `vim.treesitter.` and `get_query` separately.
