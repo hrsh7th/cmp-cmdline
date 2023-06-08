@@ -36,9 +36,9 @@ local MODIFIER_REGEX = create_regex({
 }, true)
 
 local COUNT_RANGE_REGEX = create_regex({
-  [=[\s*\%(\d\+\|\$\)\%[,\%(\d\+\|\$\)]\s*]=],
-  [=[\s*'\%[<,'>]\s*]=],
-  [=[\s*\%(\d\+\|\$\)\s*]=],
+  [=[^\s*\%(\d\+\|\$\)\%[,\%(\d\+\|\$\)]\s*$]=],
+  [=[^\s*'\%[<,'>]\s*$]=],
+  [=[^\s*\%(\d\+\|\$\)\s*$]=],
 }, true)
 
 local OPTION_NAME_COMPLETION_REGEX = create_regex({
@@ -72,6 +72,11 @@ local definitions = {
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
     exec = function(option, arglead, cmdline, force)
+      -- Ignore range only cmdline. (e.g.: 4, '<,'>)
+      if not force and COUNT_RANGE_REGEX:match_str(cmdline) then
+        return {}
+      end
+
       local _, parsed = pcall(function()
         local target = cmdline
         local s, e = COUNT_RANGE_REGEX:match_str(target)
@@ -108,11 +113,6 @@ local definitions = {
       do
         local suffix_pos = vim.regex([[\h\w*$]]):match_str(arglead)
         fixed_input = string.sub(arglead, 1, suffix_pos or #arglead)
-      end
-
-      -- Ignore prefix only cmdline. (e.g.: 4, '<,'>)
-      if not force and cmdline == '' then
-        return {}
       end
 
       -- The `vim.fn.getcompletion` does not return `*no*cursorline` option.
