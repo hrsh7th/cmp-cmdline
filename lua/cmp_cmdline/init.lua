@@ -36,6 +36,12 @@ local MODIFIER_REGEX = create_regex({
 }, true)
 
 local COUNT_RANGE_REGEX = create_regex({
+  [=[\s*\%(\d\+\|\$\)\%[,\%(\d\+\|\$\)]\s*]=],
+  [=[\s*'\%[<,'>]\s*]=],
+  [=[\s*\%(\d\+\|\$\)\s*]=],
+}, true)
+
+local ONLY_RANGE_REGEX = create_regex({
   [=[^\s*\%(\d\+\|\$\)\%[,\%(\d\+\|\$\)]\s*$]=],
   [=[^\s*'\%[<,'>]\s*$]=],
   [=[^\s*\%(\d\+\|\$\)\s*$]=],
@@ -73,7 +79,7 @@ local definitions = {
     isIncomplete = true,
     exec = function(option, arglead, cmdline, force)
       -- Ignore range only cmdline. (e.g.: 4, '<,'>)
-      if not force and COUNT_RANGE_REGEX:match_str(cmdline) then
+      if not force and ONLY_RANGE_REGEX:match_str(cmdline) then
         return {}
       end
 
