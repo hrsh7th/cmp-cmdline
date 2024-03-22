@@ -11,7 +11,11 @@ local function create_regex(patterns, head)
   return vim.regex(pattern)
 end
 
+---@class cmp-cmdline.Option
+---@field treat_trailing_slash boolean
+---@field ignore_cmds string[]
 local DEFAULT_OPTION = {
+  treat_trailing_slash = true,
   ignore_cmds = { 'Man', '!' }
 }
 
@@ -77,6 +81,7 @@ local definitions = {
     regex = [=[[^[:blank:]]*$]=],
     kind = cmp.lsp.CompletionItemKind.Variable,
     isIncomplete = true,
+    ---@param option cmp-cmdline.Option
     exec = function(option, arglead, cmdline, force)
       -- Ignore range only cmdline. (e.g.: 4, '<,'>)
       if not force and ONLY_RANGE_REGEX:match_str(cmdline) then
@@ -125,6 +130,7 @@ local definitions = {
       -- cmp-cmdline corrects `no` prefix for option name.
       local is_option_name_completion = OPTION_NAME_COMPLETION_REGEX:match_str(cmdline) ~= nil
 
+      --- create items.
       local items = {}
       local escaped = cmdline:gsub([[\\]], [[\\\\]]);
       for _, word_or_item in ipairs(vim.fn.getcompletion(escaped, 'cmdline')) do
@@ -138,9 +144,24 @@ local definitions = {
           }))
         end
       end
+
+      -- fix label with `fixed_input`
       for _, item in ipairs(items) do
         if not string.find(item.label, fixed_input, 1, true) then
           item.label = fixed_input .. item.label
+        end
+      end
+
+      -- fix trailing slash for path like item
+      if option.treat_trailing_slash then
+        for _, item in ipairs(items) do
+          local is_target = string.match(item.label, [[/$]])
+          is_target = is_target and not (string.match(item.label, [[~/$]]))
+          is_target = is_target and not (string.match(item.label, [[%./$]]))
+          is_target = is_target and not (string.match(item.label, [[%.%./$]]))
+          if is_target then
+            item.label = item.label:sub(1, -2)
+          end
         end
       end
       return items

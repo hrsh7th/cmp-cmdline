@@ -43,3 +43,10 @@ Default: `{ "Man", "!" }`
 
 You can specify ignore command name.
 
+### treat_trailing_slash: boolean
+Default: `true`
+
+`vim.fn.getcompletion` can return path items.
+unfortunately, that items has trailing slash so we don't narrowing with next directory with pressing `/`.
+
+if you turnd on this option, `cmp-cmdline` removes trailing slash automatically.
