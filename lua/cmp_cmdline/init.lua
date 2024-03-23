@@ -1,4 +1,11 @@
-local cmp = require('cmp')
+local cmp = require("cmp")
+
+--- close complete window when entering command window with ctrl-f
+vim.api.nvim_create_autocmd("CmdWinEnter", {
+	callback = function()
+		require("cmp").close()
+	end,
+})
 
 ---@param patterns string[]
 ---@param head boolean
