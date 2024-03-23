@@ -133,15 +133,18 @@ local definitions = {
       --- create items.
       local items = {}
       local escaped = cmdline:gsub([[\\]], [[\\\\]]);
-      for _, word_or_item in ipairs(vim.fn.getcompletion(escaped, 'cmdline')) do
-        local word = type(word_or_item) == 'string' and word_or_item or word_or_item.word
-        local item = { label = word }
-        table.insert(items, item)
-        if is_option_name_completion and is_boolean_option(word) then
-          table.insert(items, vim.tbl_deep_extend('force', {}, item, {
-            label = 'no' .. word,
-            filterText = word,
-          }))
+      local completion_ok, completion = pcall(vim.fn.getcompletion, escaped, 'cmdline')
+      if completion_ok then
+        for _, word_or_item in ipairs(completion) do
+          local word = type(word_or_item) == 'string' and word_or_item or word_or_item.word
+          local item = { label = word }
+          table.insert(items, item)
+          if is_option_name_completion and is_boolean_option(word) then
+            table.insert(items, vim.tbl_deep_extend('force', {}, item, {
+              label = 'no' .. word,
+              filterText = word,
+            }))
+          end
         end
       end
 
