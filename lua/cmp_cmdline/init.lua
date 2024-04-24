@@ -122,7 +122,11 @@ local definitions = {
       -- In this case, the `vim.fn.getcompletion` will return only `get_query` for `vim.treesitter.get_|`.
       -- We should detect `vim.treesitter.` and `get_query` separately.
       -- TODO: The `\h\w*` was choosed by huristic. We should consider more suitable detection.
-      local fixed_input = arglead
+      local fixed_input
+      do
+        local suffix_pos = vim.regex([[\h\w*$]]):match_str(arglead)
+        fixed_input = string.sub(arglead, 1, suffix_pos or #arglead)
+      end
 
       -- The `vim.fn.getcompletion` does not return `*no*cursorline` option.
       -- cmp-cmdline corrects `no` prefix for option name.
@@ -158,7 +162,7 @@ local definitions = {
         if is_magic_file then
           local replace_range = {
             start = {
-              character = cmdline_length - #fixed_input - 1
+              character = cmdline_length - #arglead - 1
             },
             ['end'] = {
               character = cmdline_length - 1
@@ -169,7 +173,7 @@ local definitions = {
             range = replace_range,
             newText = item.label
           }
-          item.label = fixed_input .. ' → ' .. item.label
+          item.label = arglead .. ' → ' .. item.label
         end
       end
 
