@@ -123,6 +123,12 @@ local definitions = {
       local fixed_input
       do
         local suffix_pos = vim.regex([[\h\w*$]]):match_str(arglead)
+        local match = (string.match(arglead, "(%-%-[%w%-]+=)"))
+
+        if match then
+          arglead = match
+        end
+
         fixed_input = string.sub(arglead, 1, suffix_pos or #arglead)
       end
 
