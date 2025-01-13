@@ -200,7 +200,7 @@ source.complete = function(self, params, callback)
       offset = s
       ctype = def.ctype
       items = def.exec(
-        vim.tbl_deep_extend('keep', params.option or {}, DEFAULT_OPTION),
+        vim.tbl_deep_extend('keep', DEFAULT_OPTION, params.option or {}),
         string.sub(params.context.cursor_before_line, s + 1),
         params.context.cursor_before_line,
         params.context:get_reason() == cmp.ContextReason.Manual
