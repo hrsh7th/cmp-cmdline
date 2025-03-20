@@ -1,4 +1,6 @@
 local cmp = require('cmp')
+local regexpengine = vim.api.nvim_get_option_value('regexpengine', {})
+vim.api.nvim_set_option_value('regexpengine', 2, { scope = 'local' })
 
 ---@param patterns string[]
 ---@param head boolean
@@ -245,4 +247,5 @@ source.complete = function(self, params, callback)
   })
 end
 
+vim.api.nvim_set_option_value('regexpengine', regexpengine, { scope = 'local' })
 return source
