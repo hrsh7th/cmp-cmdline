@@ -49,4 +49,4 @@ Default: `true`
 `vim.fn.getcompletion` can return path items.
 unfortunately, that items has trailing slash so we don't narrowing with next directory with pressing `/`.
 
-if you turnd on this option, `cmp-cmdline` removes trailing slash automatically.
+if you turned on this option, `cmp-cmdline` removes trailing slash automatically.
