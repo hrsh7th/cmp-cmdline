@@ -148,7 +148,7 @@ local definitions = {
       -- fix label with `fixed_input`
       for _, item in ipairs(items) do
         if not string.find(item.label, fixed_input, 1, true) then
-          item.label = fixed_input .. item.label
+          item.filterText = arglead
         end
       end
 
