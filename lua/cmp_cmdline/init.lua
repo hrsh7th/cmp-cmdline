@@ -83,6 +83,8 @@ local definitions = {
     isIncomplete = true,
     ---@param option cmp-cmdline.Option
     exec = function(option, arglead, cmdline, force)
+      -- Any edits we produce are relative to the whole command line.
+      local cmdline_length = #cmdline
       -- Ignore range only cmdline. (e.g.: 4, '<,'>)
       if not force and ONLY_RANGE_REGEX:match_str(cmdline) then
         return {}
@@ -133,6 +135,13 @@ local definitions = {
       --- create items.
       local items = {}
       local escaped = cmdline:gsub([[\\]], [[\\\\]]);
+      local is_magic_file = false
+      local input_start = string.sub(fixed_input, 1, 1)
+      if input_start == '%' then
+        is_magic_file = true
+      elseif input_start == '#' then
+        is_magic_file = true
+      end
       for _, word_or_item in ipairs(vim.fn.getcompletion(escaped, 'cmdline')) do
         local word = type(word_or_item) == 'string' and word_or_item or word_or_item.word
         local item = { label = word }
@@ -147,8 +156,24 @@ local definitions = {
 
       -- fix label with `fixed_input`
       for _, item in ipairs(items) do
-        if not string.find(item.label, fixed_input, 1, true) then
+        if not is_magic_file and not string.find(item.label, fixed_input, 1, true) then
           item.label = fixed_input .. item.label
+        end
+        if is_magic_file then
+          local replace_range = {
+            start = {
+              character = cmdline_length - #arglead - 1
+            },
+            ['end'] = {
+              character = cmdline_length - 1
+            }
+          }
+          item.textEdit = {
+            replace = replace_range,
+            range = replace_range,
+            newText = item.label
+          }
+          item.label = arglead .. ' → ' .. item.label
         end
       end
 
@@ -217,6 +242,20 @@ source.complete = function(self, params, callback)
   for _, item in ipairs(items) do
     item.kind = kind
     labels[item.label] = true
+    if item['textEdit'] ~= nil then
+      local new_range = {
+        start = {
+          character = item.textEdit.range.start.character,
+          line = params.context.cursor.line
+        },
+        ['end'] = {
+          character = item.textEdit.range['end'].character,
+          line = params.context.cursor.line
+        }
+      }
+      item.textEdit.replace = new_range
+      item.textEdit.range = new_range
+    end
   end
 
   -- `vim.fn.getcompletion` does not handle fuzzy matches. So, we must return all items, including items that were matched in the previous input.
